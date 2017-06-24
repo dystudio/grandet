@@ -16,21 +16,19 @@ func main() {
 	// 初始化配置信息
 	var cfg grandet.Config
 
-	//brokers = ["10.29.204.73:19092","10.27.185.100:19092","10.169.117.85:19092"]
-	//zkpath = ["10.29.204.73:12181","10.27.185.100:12181","10.169.117.85:12181"]
-
-	cfg.Brokers = []string{"10.29.1.1:19092", "10.27.1.2:19092", "10.169.1.3:19092"}
-	cfg.ZkPath = []string{"10.29.1.1:12181", "10.27.1.2:12181", "10.169.1.3:12181"}
+	cfg.Brokers = []string{"10.29.204.73:19092", "10.27.185.100:19092", "10.169.117.85:19092"}
+	cfg.ZkPath = []string{"10.29.204.73:12181", "10.27.185.100:12181", "10.169.117.85:12181"}
 	cfg.FirstLoad = true
 	cfg.NodeName = "DumpMeta"
 	cfg.Topic = "databustest.test"
-	cfg.Serverip = "10.169.1.11"
+	cfg.Serverip = "10.169.117.85"
 	cfg.Serverport = "888"
 	cfg.LogLevel = "debug"
 	cfg.LogDir = "/root/log"
 	cfg.LogFile = "grandet_error.log"
 	cfg.Mirrorenable = true
 	cfg.KeepAlivepath = "KeepAliveNode"
+	// 若不配置，默认为当前文件夹
 	cfg.Replinfopath = "/root/data/Repl.info"
 
 	// 新建Client

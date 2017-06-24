@@ -70,6 +70,8 @@ type Config struct {
 	Mirrorenable  bool     `toml:"mirror_enable"`
 	KeepAlivepath string   `toml:"keepalivepath"`
 	Replinfopath  string   `toml:"replinfopath"`
+	MasterName    string   `toml:"mastername"`
+	MasterPos     uint32   `toml:"masterpos"`
 }
 
 type Client struct {
@@ -97,7 +99,11 @@ func NewClient(cfg *Config) (*Client, error) {
 	log.SetLevelByString(cfg.LogLevel)
 	log.SetOutputByName(path.Join(cfg.LogDir, cfg.LogFile))
 
+	log.Info("LoadRepliInfo\n")
 	// 初始化当前OFFSET位置
+	if len(cfg.Replinfopath) == 0 {
+		cfg.Replinfopath = "./Repl.info"
+	}
 	rpl, err := LoadRepliInfo(cfg.Replinfopath)
 	if err != nil {
 		log.Fatalf("parse replicateInfo file failed(%s): %s", cfg.Replinfopath, err)
@@ -105,6 +111,32 @@ func NewClient(cfg *Config) (*Client, error) {
 
 	c.rpl = rpl
 
+	if c.rpl.MasterName != "PLEASERELOAD" {
+		return c, nil
+	}
+
+	// 判断是否不落地，并且没有Repl文件，且有外部参数录入
+	if rpl.MasterName == "PLEASERELOAD" && !cfg.FirstLoad {
+		if len(cfg.MasterName) == 0 || cfg.MasterPos == 0 {
+			log.Error("When FirstLoad false,and Have not Repl.info,Your MasterName and MasterPos is Wrong !")
+			return nil, errors.New("Wrong MasterName or MasterPos")
+		}
+	}
+
+	// 判断是否不落地，并且没有Repl文件，且有外部参数录入
+	if rpl.MasterName == "PLEASERELOAD" && !cfg.FirstLoad {
+		log.Info("GetOffset while Start by MasterName and Master Pos \n")
+		offsetNew, err := GetOffset(cfg)
+		if err != nil {
+			log.Error(err)
+			return nil, errors.New("Can Not Get Offset by Configuration")
+		}
+
+		c.rpl = &ReplicateInfo{MasterName: cfg.MasterName, MasterPos: cfg.MasterPos, Offset: offsetNew}
+		return c, nil
+	}
+
+	log.Info("Get Zk Message\n")
 	// 获取ZK的信息
 	initPath := "/Databus"
 	zkConn, connErr := ZkConnection(cfg.ZkPath, initPath)
@@ -124,6 +156,7 @@ func NewClient(cfg *Config) (*Client, error) {
 
 	log.Infof("ZK MESSAGE: Offset is %d, Dumpfile is %s \n", zkDumpMetadata.Offset, zkDumpMetadata.Dumpfile)
 
+	log.Info("Get KeepAliveNode \n")
 	// 获取Server的KeepAliveNode监听信息
 	if cfg.Mirrorenable {
 		ok, _ := checkMasterAliveClient(cfg)
@@ -341,4 +374,30 @@ func SaveRpl(name string, rpl *ReplicateInfo) error {
 		log.Errorf("Client save rplication info to file %s err %v", name, err)
 	}
 	return errors.Trace(err)
+}
+
+func GetOffset(cfg *Config) (int64, error) {
+	// 从Kafka上面利用MasterName,MasterPos，获取Offset
+	p, err := NewPartitionConsumer(cfg.Topic, cfg.Brokers, true)
+	if err != nil {
+		log.Error(err)
+		return 0, errors.Trace(err)
+	}
+
+	log.Debug("Get NewPartitionConsumer!\n")
+
+	defer p.master.Close()
+	defer p.client.Close()
+
+	p.Name = cfg.MasterName
+	p.Pos = uint64(cfg.MasterPos)
+
+	log.Debug("Into SerchAsc!\n")
+	offsetpos, err := p.SearchAsc()
+	if err != nil {
+		return 0, err
+	}
+
+	return offsetpos, nil
+
 }
