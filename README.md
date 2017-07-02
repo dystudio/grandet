@@ -14,6 +14,8 @@ grandet是mysql-databus项目的客户端SDK
 3. 提供使用简单的客户端SDK实时获取数据，数据消费者按自身需要灵活使用获取的数据
 4. 支持初始化配置，即获取快照
 5. 支持指定BINLOG POS配置，即不获取快照，非初始化
+6. DML的Do()函数生产SQL语句时，自动增加SCHEMA，MYSQL输出可直接使用
+7. DDL的Query自带SCHEMA,MYSQL输出可直接使用
 
 
 ## SDK文档

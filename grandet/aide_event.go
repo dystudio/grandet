@@ -50,7 +50,7 @@ func insert(table *schema.Table, row []interface{}) (string, error) {
 	columns = columns[0 : len(columns)-1]
 	values = values[0 : len(values)-1]
 
-	sqlcmd := "REPLACE INTO `" + table.Name + "` (" + columns + ") VALUES (" + values + ")"
+	sqlcmd := "REPLACE INTO `" + table.Schema + "`.`" + table.Name + "` (" + columns + ") VALUES (" + values + ")"
 
 	return sqlcmd, nil
 }
@@ -71,7 +71,7 @@ func delete(table *schema.Table, row []interface{}) (string, error) {
 	}
 	condition = condition[0 : len(condition)-len(" AND ")]
 
-	sqlcmd := "DELETE FROM `" + table.Name + "` WHERE " + condition
+	sqlcmd := "DELETE FROM `" + table.Schema + "`.`" + table.Name + "` WHERE " + condition
 
 	return sqlcmd, nil
 }
@@ -102,7 +102,7 @@ func update(table *schema.Table, before, after []interface{}) (string, error) {
 	}
 	setValues = setValues[0 : len(setValues)-1]
 
-	sqlcmd := "UPDATE `" + table.Name + "` SET" + setValues + " WHERE " + condition
+	sqlcmd := "UPDATE `" + table.Schema + "`.`" + table.Name + "` SET" + setValues + " WHERE " + condition
 
 	return sqlcmd, nil
 }
