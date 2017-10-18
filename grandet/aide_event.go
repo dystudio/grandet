@@ -40,7 +40,7 @@ func insert(table *schema.Table, row []interface{}) (string, error) {
 		if row[k] == nil {
 			values += "NULL,"
 		} else {
-			values += "'" + EscapeStringBackslash(InterfaceToString(row[k])) + "',"
+			values += "'" + EscapeStringBackslash(InterfaceToStringRawType(row[k],table.Columns[k].RawType)) + "',"
 		}
 	}
 	if columns == "" || values == "" {
@@ -61,7 +61,7 @@ func delete(table *schema.Table, row []interface{}) (string, error) {
 		if row[k] == nil {
 			condition += "`" + table.Columns[k].Name + "`=NULL AND "
 		} else {
-			condition += "`" + table.Columns[k].Name + "`='" + EscapeStringBackslash(InterfaceToString(row[k])) + "' AND "
+			condition += "`" + table.Columns[k].Name + "`='" + EscapeStringBackslash(InterfaceToStringRawType(row[k],table.Columns[k].RawType)) + "' AND "
 		}
 	}
 
@@ -83,7 +83,7 @@ func update(table *schema.Table, before, after []interface{}) (string, error) {
 			condition += "`" + table.Columns[k].Name + "`=NULL AND "
 		} else {
 			condition += "`" + table.Columns[k].Name + "`='" +
-				EscapeStringBackslash(InterfaceToString(before[k])) + "' AND "
+				EscapeStringBackslash(InterfaceToStringRawType(before[k],table.Columns[k].RawType)) + "' AND "
 		}
 	}
 
@@ -97,7 +97,7 @@ func update(table *schema.Table, before, after []interface{}) (string, error) {
 		if after[k] == nil {
 			setValues += "`" + table.Columns[k].Name + "`=NULL,"
 		} else {
-			setValues += "`" + table.Columns[k].Name + "`='" + EscapeStringBackslash(InterfaceToString(after[k])) + "',"
+			setValues += "`" + table.Columns[k].Name + "`='" + EscapeStringBackslash(InterfaceToStringRawType(after[k],table.Columns[k].RawType)) + "',"
 		}
 	}
 	setValues = setValues[0 : len(setValues)-1]
